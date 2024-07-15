@@ -5,15 +5,21 @@ import StarIcon from "@mui/icons-material/Star";
 import "./app.css";
 import axios from "axios";
 import { format } from "timeago.js";
+import Register from "./components/Register";
+import Login from "./components/Login";
 
 function App() {
-  const currentUser = "halil";
+  const myStorage=window.localStorage;
+  const [currentUser, setCurrentUser] = useState(myStorage.getItem("user"));
   const [pins, setPins] = useState([]);
   const [currentPlaceId, setCurrentPlaceId] = useState(null);
   const [newPlace, setNewPlace] = useState(null);
   const [title, setTitle] = useState(null);
   const [desc, setDesc] = useState(null);
   const [rating, setRating] = useState(0);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
   const [viewport, setViewport] = useState({
     width: "100vw",
     height: "100vh",
@@ -48,26 +54,29 @@ function App() {
     });
   };
 
-  const handleSubmit= async (e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newPin={
-      username:currentUser,
+    const newPin = {
+      username: currentUser,
       title,
       desc,
       rating,
-      lat:newPlace.lat,
-      long:newPlace.long,
-
-    }
+      lat: newPlace.lat,
+      long: newPlace.long,
+    };
 
     try {
-      const res= await axios.post("/pins",newPin);
-      setPins([...pins,res.data]);
+      const res = await axios.post("/pins", newPin);
+      setPins([...pins, res.data]);
       setNewPlace(null);
     } catch (err) {
       console.log(err);
-      
     }
+  };
+
+  const handleLogout=()=>{
+    myStorage.removeItem("user");
+    setCurrentUser(null);
   }
 
   return (
@@ -85,8 +94,8 @@ function App() {
             <Marker
               longitude={p.long}
               latitude={p.lat}
-              offsetLeft={-viewport.zoom*3.5}
-              offsetTop={-viewport.zoom*7}
+              offsetLeft={-viewport.zoom * 3.5}
+              offsetTop={-viewport.zoom * 7}
             >
               <LocationOnIcon
                 style={{
@@ -112,7 +121,6 @@ function App() {
                   <label>Rating</label>
                   <div className="stars">
                     {Array(p.rating).fill(<StarIcon className="star" />)}
-                    
                   </div>
                   <label>Information</label>
                   <span className="username">
@@ -160,6 +168,26 @@ function App() {
             </div>
           </Popup>
         )}
+
+        {currentUser ? (
+          <button className="button logout" onClick={handleLogout}>Log out</button>
+        ) : (
+          <div className="buttons">
+            <button className="button login" onClick={() => setShowLogin(true)}>
+              Log in
+            </button>
+            <button
+              className="button register"
+              onClick={() => setShowRegister(true)}
+            >
+              Register
+            </button>
+          </div>
+        )}
+
+        {showRegister && <Register setShowRegister={setShowRegister}/>}
+        {showLogin && <Login setShowLogin={setShowLogin} myStorage={myStorage} setCurrentUser={setCurrentUser} />}
+
       </ReactMapGL>
     </div>
   );
